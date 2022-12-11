@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, json
 from gpiozero import LED
 from gpiozero.pins.pigpio import PiGPIOFactory
 from prometheus_flask_exporter import PrometheusMetrics
@@ -30,6 +30,17 @@ endpoint_counter = metrics.counter(
 @endpoint_counter
 def index():
     return render_template('led.html')
+
+@app.route('/status')
+@endpoint_counter
+def healthcheck():
+    response = app.response_class(
+            response=json.dumps({"result":"OK - healthy"}),
+            status=200,
+            mimetype='application/json'
+    )
+    app.logger.info('Status request successfull')
+    return response
 
 @app.route('/on')
 @endpoint_counter
