@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: ledport
+  labels:
+    name: led-monitoring
+    release: prometheus
+  name: led-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: led-monitoring
+  template:
+    metadata:
+      labels:
+        app: led-monitoring
+    spec:
+      containers:
+      - name: led-monitoring
+        image: linuxrobotgeek/led-monitoring:latest
+        imagePullPolicy: Always
+        ports:
+        - name: ledport
+          containerPort: 5000
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: led-monitoring
+  labels:
+    app: led-monitoring
+spec:
+  selector:
+    app: led-monitoring
+  ports:
+    - name: led-monitoring
+      protocol: TCP
+      port: 5000
+      targetPort: ledport
+  type: LoadBalancer
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: led-monitoring
+  namespace: monitoring
+  labels:
+    app: led-monitoring
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: led-monitoring
+  endpoints:
+  - port: led-monitoring
+    path: /metrics
+    interval: 15s
+  namespaceSelector:
+    matchNames:
+    - defaultF
