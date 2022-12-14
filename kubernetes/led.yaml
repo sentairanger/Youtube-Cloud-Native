@@ -62,4 +62,4 @@ spec:
     interval: 15s
   namespaceSelector:
     matchNames:
-    - defaultF
+    - default
